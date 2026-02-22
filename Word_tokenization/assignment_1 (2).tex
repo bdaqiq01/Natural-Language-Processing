@@ -1,0 +1,50 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{ latexsym }
+\usepackage{graphicx}
+\graphicspath{ {../Figures/} }
+
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.2in, 8in}]{geometry}
+
+\usepackage[usenames,dvipsnames]{color}
+\definecolor{darkblue}{rgb}{0,0,.6}
+\definecolor{darkred}{rgb}{.7,0,0}
+\definecolor{darkgreen}{rgb}{0,.6,0}
+\definecolor{red}{rgb}{.98,0,0}
+\usepackage[colorlinks,pagebackref,pdfusetitle,urlcolor=darkblue,citecolor=darkblue,linkcolor=darkred,bookmarksnumbered,plainpages=false]{hyperref}
+
+\title{CSCI 682 - Topics in Artificial Intelligence: \\ Natural Language Processing \\ Assignment 1}
+\author{ }
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\noindent Solutions to the questions on this assignment should be submitted via PDF and .py file to Canvas before \textbf{February 1st at 11:59 pm}. Make sure to justify your answers. \\
+
+\noindent I highly encourage you to collaborate with one another. However, you must write up your own solutions \textbf{independently}. Feel free to communicate via \href{https://discord.gg/xfBWWkbm2P}{Discord} and to post questions on the appropriate forum in Canvas. Do not post solutions. Also, please include a list of the people you work with at the top of your submission.\\
+
+\noindent Have fun!
+
+
+\section*{Problems}
+
+
+\begin{enumerate}
+    \item (5 pts) How many words do you know? Carefully define any ambiguous terms and explain your reasoning carefully.
+
+    \item Consider the text of \emph{Alice's Adventures in Wonderland} by Lewis Carroll available on Canvas as alice29.txt.
+    \begin{enumerate}
+        \item (5 pts) Perform a simple tokenization using regular expressions in Python. Separate sentences based on periods (.), exclamation points (!), or question marks (?) followed by one or more whitespace characters and add explicit sentence start and end tokens. For each sentence, separate words on whitespace and remove all punctuation. Include a code snippet in your PDF submission.
+        \item (5 pts) Report the $(1)$ total number of tokens, $(2)$ vocabulary size, and $(3)$ the number of tokens that appear exactly once.
+        \item (5 pts) Rank the tokens with respect to frequency. Plot token frequency against rank on a log-log scale and describe your observations.
+        \item (10 pts) Use token counts to define a unigram language model and a bigram language model. Generate 5 sample sentences using each model and compare the results. Include code snippets in your PDF submission.
+        \item (5 pts) Extra Credit - Implement the Byte-Pair Encoding (BPE) algorithm at the character level in Python. Use this implementation to tokenize the corpus using 50 merges and repeat the analysis from above. Describe your results and include a code snippet in your PDF submission.
+    \end{enumerate}
+\end{enumerate}
+
+
+\end{document}
