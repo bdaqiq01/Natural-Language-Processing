@@ -1,0 +1,68 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{ latexsym }
+\usepackage{graphicx}
+\graphicspath{ {../Figures/} }
+
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.2in, 8in}]{geometry}
+
+\usepackage[usenames,dvipsnames]{color}
+\definecolor{darkblue}{rgb}{0,0,.6}
+\definecolor{darkred}{rgb}{.7,0,0}
+\definecolor{darkgreen}{rgb}{0,.6,0}
+\definecolor{red}{rgb}{.98,0,0}
+\usepackage[colorlinks,pagebackref,pdfusetitle,urlcolor=darkblue,citecolor=darkblue,linkcolor=darkred,bookmarksnumbered,plainpages=false]{hyperref}
+
+\title{CSCI 682 - Topics in Artificial Intelligence: \\ Natural Language Processing \\ Assignment 2}
+\author{ }
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\noindent Solutions to the questions on this assignment should be submitted via PDF and .py file to Canvas before \textbf{February 22nd at 11:59 pm}. Make sure to justify your answers. \\
+
+\noindent I highly encourage you to collaborate with one another. However, you must write up your own solutions \textbf{independently}. Feel free to communicate via \href{https://discord.gg/xfBWWkbm2P}{Discord} and to post questions on the appropriate forum in Canvas. Do not post solutions. Also, please include a list of the people you work with at the top of your submission.\\
+
+\noindent Have fun!
+
+
+\section*{Problems}
+
+
+\begin{enumerate}
+    \item In this problem, we will implement logistic regression for binary classification step by step. The file \verb|logRegSkeleton.py| on Canvas may be useful as a foundation.
+    \begin{enumerate}
+        \item (5 pts) Implement the \verb|sigmoid(x)| function.
+        \item (8 pts) Implement the \verb|predict_proba(X, w, b)| function which returns an estimate of $P(y=1|x)$ for each observation in $X$.
+        \item (2 pts) Implement the \verb|predict(X, w, b, thresh)| function which returns 0 or 1 for each observation in $X$.
+        \item (5 pts) Implement the \verb|loss(X, y, w, b)| function which returns the average binary cross-entropy loss given true labels $y$.
+        \item (5 pts) Implement the \verb|gradients(X, y, w, b)| function which returns the gradient of the loss with respect to the model weights and the bias term.
+        \item (5 pts) Implement the \verb|fit(X, y)| function using gradient descent. 
+        \item (5 pts) Generate a synthetic dataset by sampling model parameter values using the provided \verb|generateData(n, d)| function. Think about appropriate values for $n$ and $d$ to test your logistic regression implementation and consider splitting the data into separate train and test sets. Train logistic regression models using at least three different values for $\eta$ and plot the training loss as a function of epoch. Include a horizontal line on these figures showing the loss of the final trained model on the test set. Explain your choices and describe your observations.
+        \item (5 pts) Extra Credit - Extend your implementation to handle multiclass classification problems.
+    \end{enumerate}
+
+    \item 
+    \begin{enumerate}
+        \item (5 pts) Write a function \verb|perplexity(model, test)| that computes the perplexity of a language model on a test corpus. \verb|model| should be a function that takes a context and a next word as input and returns the conditional probability of that word given the context under the model. \verb|test| is a sequence of words over which perplexity should be computed.
+        \item (5 pts) Design a small training corpus ($\sim 5-10$ word instances) and a small test set ($\sim 3-5$ word instance). Make sure that all observations in the test set have non-zero probability under the models. Compute perplexity by hand for a unigram language model and a bigram language model given this data.
+    \end{enumerate}
+
+    \item In this question, we will explore the performance of language models trained and tested in different ways. We will focus on the \verb|t8.shakespeare.txt| and \verb|alice29.txt| corpora available on Canvas.
+    \begin{enumerate}
+        \item (5 pts) To start, let \verb|t8.shakespeare.txt| be our training data and \verb|alice29.txt| be our test data. Use \href{https://www.nltk.org/}{NLTK} or \href{https://spacy.io/}{spaCy} to split each corpus into sentences and words. Use the training data to build a vocabulary and be careful to map unseen test words to a special \verb|<UNK>| token. 
+        \item (8 pts) Build unigram and bigram models using add-1 smoothing.
+        \item (7 pts) Use the \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html}{scikit-learn} implementation of multinomial logistic regression to train a bigram language model. Specifically, given a word $w_{t-1}$, this model should produce a probability distribution over next words $w_t$. Consider using \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.text.HashingVectorizer.html}{HashingVectorizer} with \verb|analyzer=lambda x: x| and tokens from part $(a)$ to generate word representations. Briefly explain why using an explicit one-hot encoding may be problematic in this case.
+        \item (5 pts) Evaluate the performance of these models on the test set using perplexity. Discuss your results.
+        \item (10 pts) Repeat the above process using $(1)$ \verb|alice29.txt| as the training data and \verb|t8.shakespeare.txt| for testing, $(2)$ \verb|t8.shakespeare.txt| for both training and testing (be sure to perform an appropriate split), and $(3)$ \verb|alice29.txt| for both training and testing (be sure to perform an appropriate split). 
+        \item (10 pts) Propose a different approach for splitting the corpora into train and test sets. Repeat $(a-d)$ above with this approach and compare the results.
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}
+
