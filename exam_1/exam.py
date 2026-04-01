@@ -142,23 +142,19 @@ if __name__ == '__main__':
     )
     model = train_and_evaluate(X_train, X_test, y_train, y_test)
 
-    tokenized = [r.split() for r in df['clean_review'].tolist()]
-    labels = df['label'].tolist()
+    #traing and test sentecne same as regression
+    train_sents = df.loc[X_train.index, 'clean_review'].apply(str.split).tolist() #tokenized sentences for training
+    test_sents = df.loc[X_test.index, 'clean_review'].apply(str.split).tolist()
 
-    train_idx, test_idx = train_test_split(
-        range(len(df)), test_size=0.2, random_state=42, stratify=y
-    )
+    train_labels = y_train.tolist()
+    test_labels = y_test.tolist()
 
-    train_sents = [tokenized[i] for i in train_idx]
-    test_sents = [tokenized[i] for i in test_idx]
-    train_labels = [labels[i] for i in train_idx]
-    test_labels = [labels[i] for i in test_idx]
+    #e 
+    # if label is 1 then goes to pos else to negatice 
+    pos_train = [s for s, l in zip(train_sents, train_labels) if l == 1]
+    neg_train = [s for s, l in zip(train_sents, train_labels) if l == 0]
 
-
-    # (e) Trigram sentiment classification via perplexity
-    pos_train = [train_sents[i] for i in range(len(train_sents)) if train_labels[i] == 1]
-    neg_train = [train_sents[i] for i in range(len(train_sents)) if train_labels[i] == 0]
-
+    #creating ngram counts for positive and negative reviews
     pos_counts, pos_vocab, pos_total = build_ngram_counts(pos_train, n=3, min_freq=1)
     neg_counts, neg_vocab, neg_total = build_ngram_counts(neg_train, n=3, min_freq=1)
 
@@ -166,11 +162,12 @@ if __name__ == '__main__':
 
     preds = []
     for sent in test_sents:
-        prepared = [w if w in combined_vocab else '<UNK>' for w in sent]
-        pp_pos = sentence_perplexity(prepared, pos_counts, pos_total, n=3, alpha=0.4)
-        pp_neg = sentence_perplexity(prepared, neg_counts, neg_total, n=3, alpha=0.4)
-        preds.append(1 if pp_pos <= pp_neg else 0)
+        prepared = [w if w in combined_vocab else '<UNK>' for w in sent] #replace all words in testing which are not in the training set with <UNK>
+        pp_pos = perplexity([prepared], pos_counts, pos_total, n=3, alpha=0.4) #perplexity for positive reviews
+        pp_neg = perplexity([prepared], neg_counts, neg_total, n=3, alpha=0.4) #perplexity for negative reviews
+        preds.append(1 if pp_pos <= pp_neg else 0) #if positive pp is lower than negative pp then it is positive else negative
 
+    print("==== Perplexity Classifier Results ====")
     print(f"Accuracy: {accuracy_score(test_labels, preds):.4f}")
     print(classification_report(test_labels, preds, target_names=['Negative', 'Positive']))
 
