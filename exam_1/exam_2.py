@@ -59,28 +59,29 @@ def print_table(results_50, results_100):
     print(df.to_string(index=False))
 
 
-def prepare_splits(categories, glove):
-    """Flatten analogies, filter to vocab, stratified split 70/15/15."""
-    all_analogies = []
-    for cat_idx, (cat, analogies) in enumerate(categories.items()):
-        for a, b, c, d in analogies:
-            if all(w in glove for w in (a, b, c, d)):
-                all_analogies.append((a, b, c, d, cat_idx))
+def prepare_splits(categories, glove): # the catagoes[] is a diction whire the key is the cat name and the value is a list of 4 words analogy 
 
-    labels = [x[4] for x in all_analogies]
+    all_analogies = [] #each row will be a, b, c, d, cat_idx
+    for cat_idx, (cat, analogies) in enumerate(categories.items()):
+        for a, b, c, d in analogies: #throgh eah anal in the catagory
+            if all(w in glove for w in (a, b, c, d)): #check if all the words are in the glove model
+                all_analogies.append((a, b, c, d, cat_idx)) #append the analogy to the list
+
+    cat_labels= [x[4] for x in all_analogies] #the label is the cat_idx
     train_data, temp_data = train_test_split(
-        all_analogies, test_size=0.30, random_state=42, stratify=labels
+        all_analogies, test_size=0.30, random_state=42, stratify=cat_labels #make sure the split has same distribution for each catagory
     )
-    temp_labels = [x[4] for x in temp_data]
+    temp_cat_labels = [x[4] for x in temp_data]
+
     val_data, test_data = train_test_split(
-        temp_data, test_size=0.50, random_state=42, stratify=temp_labels
+        temp_data, test_size=0.50, random_state=42, stratify=temp_cat_labels
     )
-    return train_data, val_data, test_data
+    return train_data, val_data, test_data #return the train, val, and test data
 
 
 def build_tensors(glove, data):
-    """Convert (a,b,c,d,cat) tuples into X=concat(a,b,c) and Y=d tensors."""
-    X = np.array([np.concatenate([glove[a], glove[b], glove[c]]) for a, b, c, d, _ in data])
+
+    X = np.array([np.concatenate([glove[a], glove[b], glove[c]]) for a, b, c, d, _ in data]) #feature arrray of a, b , c
     Y = np.array([glove[d] for _, _, _, d, _ in data])
     return torch.tensor(X, dtype=torch.float32), torch.tensor(Y, dtype=torch.float32)
 
@@ -110,7 +111,7 @@ def train_model(model_nn, X_train, Y_train, epochs=20, lr=0.001, batch_size=256)
     return model_nn
 
 
-def compute_accuracy(model_nn, X, data, glove):
+def compute_accuracy(model_nn, X, data, glove, cat_names=None):
     """Predict d vectors, find nearest vocab word, compare to true d."""
     model_nn.eval()
     all_words = glove.index_to_key
@@ -125,17 +126,29 @@ def compute_accuracy(model_nn, X, data, glove):
     normed_preds = preds / pred_norms
     similarities = normed_preds @ normed_vecs.T
 
-    correct = 0
-    for i, (a, b, c, d, _) in enumerate(data):
+    cat_correct = defaultdict(int)
+    cat_count = defaultdict(int)
+
+    for i, (a, b, c, d, cat_idx) in enumerate(data):
         exclude = {glove.key_to_index[w] for w in (a, b, c)}
         sims = similarities[i].copy()
         for idx in exclude:
             sims[idx] = -1
         best_idx = np.argmax(sims)
+        cat_count[cat_idx] += 1
         if all_words[best_idx] == d:
-            correct += 1
+            cat_correct[cat_idx] += 1
 
-    return correct / len(data) * 100
+    results = {}
+    for cat_idx in sorted(cat_count.keys()):
+        name = cat_names[cat_idx] if cat_names else str(cat_idx)
+        acc = cat_correct[cat_idx] / cat_count[cat_idx] * 100
+        results[name] = acc
+
+    total_correct = sum(cat_correct.values())
+    total_count = sum(cat_count.values())
+    results['Overall'] = total_correct / total_count * 100
+    return results
 
 
 if __name__ == '__main__':
@@ -150,19 +163,69 @@ if __name__ == '__main__':
     print_table(results_50, results_100)
 
     #b - feedforward neural network for analogy task
-    glove = model_glove100
-    dim = glove.vector_size
+    cat_names = list(categories.keys())
 
-    train_data, val_data, test_data = prepare_splits(categories, glove)
-    print(f"\nSplit sizes: train={len(train_data)}, val={len(val_data)}, test={len(test_data)}")
+    #100 
+    dim100 = model_glove100.vector_size
+    train_data100, val_data100, test_data100 = prepare_splits(categories, model_glove100)
 
-    X_train, Y_train = build_tensors(glove, train_data)
-    X_val, Y_val = build_tensors(glove, val_data)
-    X_test, Y_test = build_tensors(glove, test_data)
+    X_train100, Y_train100 = build_tensors(model_glove100, train_data100)
+    X_val100, Y_val100 = build_tensors(model_glove100, val_data100)
 
-    # No hidden layer — simple linear baseline
-    model_nn = nn.Sequential(nn.Linear(3 * dim, dim))
-    model_nn = train_model(model_nn, X_train, Y_train)
+    linear100 = nn.Sequential(nn.Linear(3 * dim100, dim100))
+    linear100 = train_model(linear100, X_train100, Y_train100)
 
-    val_acc = compute_accuracy(model_nn, X_val, val_data, glove)
-    print(f"\nNeural network validation accuracy: {val_acc:.2f}%")
+    deep100 = nn.Sequential(
+        nn.Linear(3 * dim100, 1024),
+        nn.ReLU(),
+        nn.Linear(1024, 512),
+        nn.ReLU(),
+        nn.Linear(512, dim100)
+    )
+    deep100 = train_model(deep100, X_train100, Y_train100)
+
+    #50 
+    dim50 = model_glove50.vector_size
+    train_data50, val_data50, test_data50 = prepare_splits(categories, model_glove50)
+
+    X_train50, Y_train50 = build_tensors(model_glove50, train_data50)
+    X_val50, Y_val50 = build_tensors(model_glove50, val_data50)
+
+    linear50 = nn.Sequential(nn.Linear(3 * dim50, dim50))
+    linear50 = train_model(linear50, X_train50, Y_train50)
+
+    deep50 = nn.Sequential(
+        nn.Linear(3 * dim50, 1024),
+        nn.ReLU(),
+        nn.Linear(1024, 512),
+        nn.ReLU(),
+        nn.Linear(512, dim50)
+    )
+    deep50 = train_model(deep50, X_train50, Y_train50)
+
+    #eval
+    val_linear100 = compute_accuracy(linear100, X_val100, val_data100, model_glove100, cat_names)
+    val_linear50 = compute_accuracy(linear50, X_val50, val_data50, model_glove50, cat_names)
+
+    X_test100, Y_test100 = build_tensors(model_glove100, test_data100)
+    X_test50, Y_test50 = build_tensors(model_glove50, test_data50)
+
+    test_deep100 = compute_accuracy(deep100, X_test100, test_data100, model_glove100, cat_names)
+    test_deep50 = compute_accuracy(deep50, X_test50, test_data50, model_glove50, cat_names)
+
+    print("\nNN Validation Accuracy (per category):")
+    df = pd.DataFrame({
+        'Category': list(val_linear100.keys()),
+        'Linear-50': [f"{val_linear50[cat]:.2f}" for cat in val_linear50],
+        'Linear-100': [f"{val_linear100[cat]:.2f}" for cat in val_linear100],
+S    })
+    print(df.to_string(index=False))
+
+    print("\n Deep NN testing Accuracy (per category):")
+    df = pd.DataFrame({
+        'Category': list(test_deep100.keys()),
+        'Deep-50': [f"{test_deep50[cat]:.2f}" for cat in test_deep50],
+        'Deep-100': [f"{test_deep100[cat]:.2f}" for cat in test_deep100],
+    })
+    print(df.to_string(index=False))
+
