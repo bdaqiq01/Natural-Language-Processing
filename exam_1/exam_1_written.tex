@@ -1,0 +1,135 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{ latexsym }
+\usepackage{blkarray}
+\usepackage{graphicx}
+\graphicspath{ {../Figures/} }
+
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.2in, 8in}]{geometry}
+
+\usepackage[usenames,dvipsnames]{color}
+\definecolor{darkblue}{rgb}{0,0,.6}
+\definecolor{darkred}{rgb}{.7,0,0}
+\definecolor{darkgreen}{rgb}{0,.6,0}
+\definecolor{red}{rgb}{.98,0,0}
+\usepackage[colorlinks,pagebackref,pdfusetitle,urlcolor=darkblue,citecolor=darkblue,linkcolor=darkred,bookmarksnumbered,plainpages=false]{hyperref}
+
+\title{CSCI 682 - Topics in Artificial Intelligence: \\ Natural Language Processing \\ Exam 1 Written and Coding Questions}
+\author{ }
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\noindent Solutions to the written portion of the exam along with relevant figures should be submitted via PDF to Canvas. Make sure to \textbf{justify your answers}. Code should be written in a Python file called \verb|exam.py| and submitted on Canvas as well. The exam will close on \textbf{March 31st at 11:59 pm}. \\
+
+\noindent You must complete solutions to these problems \textbf{individually}. You may ask and answer questions on \href{https://discord.gg/BK3B3xJeZA}{Discord} or Canvas meant to clarify the problems but you may not discuss or post solutions. You are allowed to use your notes, material posted on Canvas, documentation for \href{https://scikit-learn.org/stable/}{scikit-learn}, \href{https://radimrehurek.com/gensim/}{Gensim}, and \href{https://pytorch.org/}{PyTorch}, and the textbook (\href{https://web.stanford.edu/~jurafsky/slp3/}{\textit{Speech and Language Processing}}) during the exam. However, you \textbf{are not permitted} to use any other resources. This includes ChatGPT, Google, Stack Overflow, and all other websites and documents available online. \\
+
+\noindent Good luck!
+
+
+\section*{Problems}
+
+\begin{enumerate}
+    \item For this question, you will be working with the TripAdvisor hotel review dataset available on Canvas and described in \emph{Latent Aspect Rating Analysis on Review Text Data: A Rating Regression Approach} (Wang et al.) and \emph{Joint Multi-grain Topic Sentiment: Modeling Semantic Aspects for Online Reviews} (Alam et al.). Your goal is to classify reviews as being positive or negative. We will define ratings of 4 or 5 as positive and rating less than 4 as negative.
+    \begin{enumerate}
+        \item (2 pts) Write Python code to load and preprocess the data. Briefly describe any preprocessing steps you choose to take beyond converting ratings to binary labels. Include code snippets of relevant functions in your PDF submission.
+        \item (5 pts) Describe at least five features of reviews that may be useful for sentiment analysis (without using pretrained embeddings). Some examples include review length, counts of specific words or phrases, and the presence or absence of negation. Write Python code to extract these features and include code snippets of the relevant functions in your PDF submission.
+        \item (3 pts) Using the features you described and the implementation of logistic regression in \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html}{scikit-learn}, train and test a classifier. Be sure to perform an appropriate split of the data. Discuss the classifier's performance.
+        \item (10 pts) Implement a general $n$-gram language model with backoff. This can extend work that you did in assignment 2, though add-1 smoothing is not required. In particular, given a value for $n$, define
+        \begin{equation*}
+            P(w_i | w_{i-1}, \dots, w_{i-n+1}) = \begin{cases}
+                \frac{C(w_i, \dots, w_{i-n+1})}{C(w_i, \dots, w_{i-n+2})} &, \text{if } C(w_i, \dots, w_{i-n+1}) > 0 \\
+                \alpha \cdot P(w_i |  w_{i-1}, \dots, w_{i-n+2}) &, \text{otherwise.}
+            \end{cases}
+        \end{equation*}
+        Start by setting $\alpha = 0.4$. During training, replace all words appearing only once with an \verb|<UNK>| tag and map unknown words during testing to this tag.
+        \item (5 pts) Using the same train/test split as part $(c)$, train two separate trigram ($n=3$) language models with backoff, one only on positive reviews and one only on negative reviews. For each test review, compute perplexity under both models and use this to predict a class label. Discuss the performance of this classifier and compare the approach against that in $(c)$.
+    \end{enumerate}
+
+    \item Recall the analogy task in the context of word embeddings. Given word representations $\mathbf{a}$, $\mathbf{b}$, and $\mathbf{c}$, the goal is to identify a word $\mathbf{d}$ such that $\mathbf{a}:\mathbf{b}::\mathbf{c}:\mathbf{d}$ (``$\mathbf{a}$ is to $\mathbf{b}$ as $\mathbf{c}$ is to $\mathbf{d}$''). A simple but surprisingly effective approach to solving this problem is to perform some vector arithmetic:
+    \[\mathbf{b} - \mathbf{a} + \mathbf{c} \approx \mathbf{d}\]
+    In particular, $\mathbf{d}$ is predicted to be the nearest word to $\mathbf{b} - \mathbf{a} + \mathbf{c}$ (ignoring $\mathbf{a}$, $\mathbf{b}$, and $\mathbf{c}$ themselves) with respect to cosine similarity.
+
+    For this problem, use the analogy dataset \texttt{questions-words.txt} available on Canvas and the pretrained embeddings available in \href{https://radimrehurek.com/gensim/}{Gensim} (pretrained models are mentioned \href{https://radimrehurek.com/gensim/models/word2vec.html}{here}). Unless otherwise noted, ignore analogies containing words that are not present in the embedding vocabulary.
+
+    Be aware that code may take several minutes to finish running for each piece of this problem!
+    \begin{enumerate}
+        \item (5 pts) Evaluate the \texttt{glove-wiki-gigaword-50} and \texttt{glove-wiki-gigaword-100} pretrained embeddings on the analogy task using the vector arithmetic described above. The \href{https://tedboy.github.io/nlps/generated/generated/gensim.models.Word2Vec.most_similar.html}{\texttt{most\_similar}} function may be helpful. Produce a table like the one below with accuracies for each category and accuracy overall. What do you observe?
+        
+        \begin{center}
+            \hspace*{-1cm}\begin{tabular}{c||c|c|}
+             & \texttt{glove-wiki-gigaword-50} & \texttt{glove-wiki-gigaword-100} \\ \hline \hline
+            capital-common-countries & & \\ \hline
+            capital-world & & \\ \hline
+            currency & & \\ \hline
+            city-in-state & & \\ \hline
+            family & & \\ \hline
+            gram1-adjective-to-adverb & & \\ \hline
+            gram2-opposite & & \\ \hline
+            gram3-comparative & & \\ \hline
+            gram4-superlative & & \\ \hline
+            gram5-present-participle & & \\ \hline
+            gram6-nationality-adjective & & \\ \hline
+            gram7-past-tense & & \\ \hline
+            gram8-plural & & \\ \hline
+            gram9-plural-verbs & & \\ \hline
+            Overall & & \\ \hline
+            \end{tabular}
+        \end{center}
+
+        As an aside, \href{https://nlp.stanford.edu/pubs/glove.pdf}{GloVe} produces embeddings that are similar to those produced by Word2Vec but using a different approach.
+        
+        \item (5 pts) Design and implement a simple feedforward neural network for the analogy task. For an analogy $\mathbf{a}:\mathbf{b}::\mathbf{c}:\mathbf{d}$, your model should take the vectors $\mathbf{a}$, $\mathbf{b}$, and $\mathbf{c}$ as input and produce a prediction for $\mathbf{d}$ as output. Describe the architecture that you choose, do not worry about tuning the architecture yet.
+        
+        Split the data into training, validation, and test sets. Describe your approach carefully. Train your model and report accuracies on the \textbf{validation set}. Do not consider the test set yet.
+
+        \begin{center}
+            \hspace*{-1cm}\begin{tabular}{c||c|c|}
+             & \texttt{glove-wiki-gigaword-50} & \texttt{glove-wiki-gigaword-100} \\ \hline \hline
+            capital-common-countries & & \\ \hline
+            capital-world & & \\ \hline
+            currency & & \\ \hline
+            city-in-state & & \\ \hline
+            family & & \\ \hline
+            gram1-adjective-to-adverb & & \\ \hline
+            gram2-opposite & & \\ \hline
+            gram3-comparative & & \\ \hline
+            gram4-superlative & & \\ \hline
+            gram5-present-participle & & \\ \hline
+            gram6-nationality-adjective & & \\ \hline
+            gram7-past-tense & & \\ \hline
+            gram8-plural & & \\ \hline
+            gram9-plural-verbs & & \\ \hline
+            Overall & & \\ \hline
+            \end{tabular}
+        \end{center}
+
+        \item (10 pts) Explore the effects of network depth, hidden layer width, and choice of non-linear activation function on model performance. Describe your experimental setup process. For the model with best performance on the validation set, report accuracies on the test set and discuss the results. Finally, compare these accuracies against the performance of the vector arithmetic approach on the test set (note that you may need to rerun part $(a)$ using a subset of the data).
+
+        \begin{center}
+            \hspace*{-1cm}\begin{tabular}{c||c|c|}
+             & \texttt{glove-wiki-gigaword-50} & \texttt{glove-wiki-gigaword-100} \\ \hline \hline
+            capital-common-countries & & \\ \hline
+            capital-world & & \\ \hline
+            currency & & \\ \hline
+            city-in-state & & \\ \hline
+            family & & \\ \hline
+            gram1-adjective-to-adverb & & \\ \hline
+            gram2-opposite & & \\ \hline
+            gram3-comparative & & \\ \hline
+            gram4-superlative & & \\ \hline
+            gram5-present-participle & & \\ \hline
+            gram6-nationality-adjective & & \\ \hline
+            gram7-past-tense & & \\ \hline
+            gram8-plural & & \\ \hline
+            gram9-plural-verbs & & \\ \hline
+            Overall & & \\ \hline
+            \end{tabular}
+        \end{center}
+    \end{enumerate} 
+\end{enumerate}
+
+\end{document}
