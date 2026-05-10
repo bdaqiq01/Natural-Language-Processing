@@ -134,7 +134,6 @@ def perplexity(sentences, ngram_counts, total_unigrams, n, alpha=0.4):
 
 
 def load_analogies(filepath):
-    """Parse questions-words.txt into {category: [(a, b, c, d), ...]}."""
     categories = defaultdict(list)
     current = None
     with open(filepath, 'r', encoding='utf-8') as f:
@@ -150,7 +149,6 @@ def load_analogies(filepath):
 
 
 def evaluate_analogies(model, categories):
-    """Part (a): evaluate using vector arithmetic b - a + c."""
     results = {}
     total_correct = 0
     total_count = 0
@@ -212,7 +210,6 @@ def build_tensors(glove, data):
 
 
 def train_model(model_nn, X_train, Y_train, epochs=20, lr=0.001, batch_size=256):
-    """Train the neural network with MSE loss."""
     optimizer = torch.optim.Adam(model_nn.parameters(), lr=lr)
     loss_fn = nn.MSELoss()
     train_loader = DataLoader(
@@ -237,7 +234,7 @@ def train_model(model_nn, X_train, Y_train, epochs=20, lr=0.001, batch_size=256)
 
 
 def compute_accuracy(model_nn, X, data, glove, cat_names=None):
-    """Predict d vectors, find nearest vocab word, compare to true d."""
+
     model_nn.eval()
     all_words = glove.index_to_key
     all_vecs = glove.vectors

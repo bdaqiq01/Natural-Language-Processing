@@ -1,0 +1,76 @@
+\documentclass{article}
+\usepackage[utf8]{inputenc}
+\usepackage{ latexsym }
+\usepackage{graphicx}
+\graphicspath{ {../Figures/} }
+
+\usepackage{amsmath}
+\usepackage[a4paper, total={6.2in, 8in}]{geometry}
+
+\usepackage[usenames,dvipsnames]{color}
+\definecolor{darkblue}{rgb}{0,0,.6}
+\definecolor{darkred}{rgb}{.7,0,0}
+\definecolor{darkgreen}{rgb}{0,.6,0}
+\definecolor{red}{rgb}{.98,0,0}
+\usepackage[colorlinks,pagebackref,pdfusetitle,urlcolor=darkblue,citecolor=darkblue,linkcolor=darkred,bookmarksnumbered,plainpages=false]{hyperref}
+
+\title{CSCI 682 - Topics in Artificial Intelligence: \\ Natural Language Processing \\ Assignment 3}
+\author{ }
+\date{}
+
+\begin{document}
+
+\maketitle
+
+
+\noindent Solutions to the questions on this assignment should be submitted via PDF and .py files to Canvas before \textbf{May 3rd at 11:59 pm}. Make sure to justify your answers. \\
+
+\noindent I highly encourage you to collaborate with one another. However, you must write up your own solutions \textbf{independently}. Feel free to communicate via \href{https://discord.gg/BK3B3xJeZA}{Discord} and to post questions on the appropriate forum in Canvas. Do not post solutions. Also, please include a list of the people you work with at the top of your submission.\\
+
+\noindent Have fun!
+
+
+\section*{Problems}
+
+
+\begin{enumerate}
+    \item In this question, we will implement a hidden Markov model to perform named entity recognition on the \href{https://huggingface.co/datasets/eriktks/conll2003}{CoNLL-2003} dataset and compare its performance against independent token classifiers. The dataset is available in Canvas.
+    \begin{enumerate}
+        \item (3 pts) Write Python code to load and preprocess the dataset. The data should already be split into \verb|training|, \verb|validation|, and \verb|test| sets. Replace words that do not appear in the \href{https://radimrehurek.com/gensim/}{Gensim} \texttt{glove-wiki-gigaword-100} embedding with an \verb|<UNK>| token and include tags for the start and end of sentences. Briefly describe any additional preprocessing that you perform. Include code snippets of the relevant functions in your PDF submission.
+
+        \item (10 pts) Implement a first-order hidden Markov model for BIO tagging. Using the training data, estimate transition probabilities between labels and emission probabilities from labels to words with add-1 smoothing. Then implement the Viterbi algorithm to decode the most likely label sequence for a sentence in the test data. Include code snippets of the relevant functions in your PDF submission.
+
+        \item (10 pts) Train four token classifiers to predict BIO labels without conditioning on neighboring predicted labels, using sparse features from \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.DictVectorizer.html}{DictVectorizer} and dense embeddings from \texttt{glove-wiki-gigaword-100}. In particular, implement
+        \begin{enumerate}
+            \item logistic regression using \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html}{scikit-learn} with sparse features using \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.DictVectorizer.html}{DictVectorizer}.
+            \item logistic regression using \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html}{scikit-learn} with dense word embeddings.
+            \item a neural network with one hidden layer accepting the embedding of a single word as input.
+            \item a neural network with one hidden layer accepting the embeddings of the previous word, current word, and next word as input.
+        \end{enumerate}
+
+        \noindent For each model, add at least two additional features that do not depend on classifications of other words (e.g. capitalization) and explain your reasoning. Discuss how you determined values for relevant hyperparameters.
+
+        \item (7 pts) Evaluate all four models on the test set and compare performance. Show a confusion matrix for each approach and compute relevant metrics. Discuss your results and consider examples of each approach outperforming the others.
+    \end{enumerate}
+
+    \item Consider the implementation of a transition-based dependency parser developed with the assistance of OpenAI's Codex available in \verb|assignment_3_q_2_skeleton.py|. In this problem, we will use the \texttt{ud\_english\_ewt} data, available on Canvas, to train a classifier that predicts the next transition given current parser state.
+    \begin{enumerate}
+        \item (10 pts) Write a function to extract features associated with the state of the parser. At a minimum, include the words and part-of-speech tags of the top two items on the stack and the first two items in the buffer. You may include additional features of your choice. Include code snippets of the relevant functions in your PDF submission.
+
+        \item (7 pts) Use \texttt{simulateGoldTransitions} and \texttt{collectTransitionExamples} to construct supervised training examples from gold-standard dependency trees. Train a classifier to predict the next parser transition from the current parser state using the implementation of logistic regression from \href{https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html}{scikit-learn} and \href{https://scikit-learn.org/stable/modules/generated/sklearn.feature_extraction.DictVectorizer.html}{DictVectorizer}. Include code snippets of the relevant functions in your PDF submission.
+
+        \item (8 pts) Use your classifier together with the provided greedy decoder to parse the test sentences. Use the provided \texttt{parseSentenceSplit} and \texttt{evaluateParses} functions to generate predicted dependency trees and compute UAS and exact match. Discuss the parser’s performance. 
+    \end{enumerate}
+
+    \item Extra Credit - Explore dependency trees in \href{https://universaldependencies.org/}{Universal Dependencies}.
+    \begin{enumerate}
+        \item (5 pts) As an alternative to the transition-based dependency parser from question 2, consider a graph-based dependency parser. For each possible dependency arc $u \to v$ in a sentence, define a score $score(u,v)$ using a classifier or linear model trained on head-dependent pairs from the training data. Then select a maximum weight spanning tree. See section \href{https://web.stanford.edu/~jurafsky/slp3/19.pdf}{19.3} of the textbook for more details on this approach.
+
+        \item (5 pts) Analyze the dependency trees for several languages. Consider comparing number of leaves (sentence length), tree depth, and a simple structural similarity measure such as edge-overlap similarity.
+        
+        \item (5 pts) Train a Word2Vec-like embedding using the \href{https://radimrehurek.com/gensim/models/word2vec.html}{Gensim} implementation or your own implementation on dependency tree data. In particular, instead of considering positive examples based on a window around a given word, focus on connections in the tree. So $(u, v)$ is a positive example if there is an edge (regardless of direction) between $u$ and $v$ in a sentence. Compare the resulting embedding to a more typical Word2Vec embedding. How do they differ? How are they the same?
+    \end{enumerate}
+\end{enumerate}
+
+\end{document}
+

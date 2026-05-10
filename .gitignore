@@ -1,0 +1,9 @@
+# HW3 local Python environment
+HW3/.venv/
+
+# Course archive(s) at repo root
+/HW3.zip
+/HW.ZIP
+
+# Project folder
+project/
